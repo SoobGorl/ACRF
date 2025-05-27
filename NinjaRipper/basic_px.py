@@ -41,20 +41,6 @@ bpy.ops.object.mode_set(mode='OBJECT')
 bpy.ops.transform.resize(value=(0.4, 0.6, 1.0))
 bpy.ops.object.transform_apply(scale=True)
 
-# Resizes collection to be about villager viewing height.  /////// DELETE LINES 41 - 45 IF OBJECT "DISAPPEARS!" ///////
-bpy.ops.transform.resize(value=(0.04, 0.04, 0.04))
-bpy.ops.object.transform_apply(scale=True)
-
-# Transforms object closer to 3D Grid's origin, and applies scale to object origin, calculating via surface.
-bpy.ops.transform.translate(value=(0, 0, 50))
-bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
-
-# Merge duplicated and disconnected vertexes.
-bpy.ops.object.mode_set(mode='EDIT')
-bpy.ops.mesh.select_all(action = 'SELECT')
-bpy.ops.mesh.remove_doubles(threshold=0.0001)
-bpy.ops.object.mode_set(mode='OBJECT')
-
 # Sets texture extensions to "Mirror." Many textures use mirroring, and are only half-textures in imported files.
 for mat in bpy.data.materials:
     if mat.node_tree:
@@ -76,31 +62,5 @@ for collection in bpy.data.collections:
                     for node in mat.node_tree.nodes:
                         if node.type == 'TEX_IMAGE':
                             mat.node_tree.links.new(shader.inputs['Alpha'], node.outputs['Alpha'])
-
-# Sets Metallic, Roughness, and IOR to values similar to those found in-game.
-#ROUGHNESS
-for mat in bpy.data.materials:
-    if hasattr(mat.node_tree, "nodes"):
-        for node in mat.node_tree.nodes:
-            if node.type == 'BSDF_PRINCIPLED':
-                for input in node.inputs:
-                    if input.name == 'Roughness':
-                        input.default_value = 1
-#METALLIC
-for mat in bpy.data.materials:
-    if hasattr(mat.node_tree, "nodes"):
-        for node in mat.node_tree.nodes:
-            if node.type == 'BSDF_PRINCIPLED':
-                for input in node.inputs:
-                    if input.name == 'Metallic':
-                        input.default_value = 0
-#IOR                     
-for mat in bpy.data.materials:
-    if hasattr(mat.node_tree, "nodes"):
-        for node in mat.node_tree.nodes:
-            if node.type == 'BSDF_PRINCIPLED':
-                for input in node.inputs:
-                    if input.name == 'IOR':
-                        input.default_value = 1
                         
 # Done! :)
