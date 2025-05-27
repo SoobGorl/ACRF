@@ -4,11 +4,9 @@ import bpy
 #                              [ Written for Blender 4.1, using NinjaRipper 2.8 ]
 
 # @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ 
-
-#               >>>>>>>>>>>>  THIS SCRIPT IS MEANT FOR >>OUTDOORS<< SCALING AND SKEWING!   <<<<<<<<<<<<
-
-#     [[[[[ THIS SCRIPT *ADDITIONALLY* MAKES TEXTURES PIXELATED, MERGES VERTEXES, AND TUNES SHADERS VALUES! ]]]]]
-
+#                                                                                                                     #
+#       >>>>>>>>>>>>  CHANGE RENDER SAMPLING TO 512! THIS WILL OFFSET HOW NOISY THE EDGES ARE!  <<<<<<<<<<<<          #
+#                                                                                                                     #
 # @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ 
 
 #                            /// RUNNING THIS SCRIPT ASSUMES YOU HAVE READ READ.MD! ///
@@ -41,7 +39,7 @@ bpy.ops.object.mode_set(mode='OBJECT')
 bpy.ops.transform.resize(value=(0.4, 0.6, 1.0))
 bpy.ops.object.transform_apply(scale=True)
 
-# Resizes collection to be about villager viewing height.  /////// DELETE LINES 44 - 50 IF OBJECT "DISAPPEARS!" ///////
+# Resizes collection to be about villager viewing height.  /////// DELETE LINES 42 - 48 IF OBJECT "DISAPPEARS!" ///////
 bpy.ops.transform.resize(value=(0.04, 0.04, 0.04))
 bpy.ops.object.transform_apply(scale=True)
 
@@ -64,14 +62,14 @@ for mat in bpy.data.materials:
                 node.extension = 'MIRROR'                
                 from bpy_extras.node_shader_utils import PrincipledBSDFWrapper
                 
-# Sets blending mode to "Clip," and connects alpha channel to BSDF for functional transparency.
+# Sets blending mode to "Hashed," and connects alpha channel to BSDF for functional transparency.
 for collection in bpy.data.collections:
     for obj in collection.objects:
         if obj.type == 'MESH' and not obj.active_material == None:
             for item in obj.material_slots:
                 mat = bpy.data.materials[item.name]
                 if mat.use_nodes:                    
-                    mat.blend_method = 'CLIP'
+                    mat.blend_method = 'HASHED'
                     shader = mat.node_tree.nodes['Principled BSDF']
                     for node in mat.node_tree.nodes:
                         if node.type == 'TEX_IMAGE':

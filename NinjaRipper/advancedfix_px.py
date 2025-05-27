@@ -4,11 +4,9 @@ import bpy
 #                              [ Written for Blender 4.1, using NinjaRipper 2.8 ]
 
 # @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ 
-
-#               >>>>>>>>>>>>  THIS SCRIPT IS MEANT FOR >>OUTDOORS<< SCALING AND SKEWING!   <<<<<<<<<<<<
-
-#     [[[[[ THIS SCRIPT *ADDITIONALLY* MAKES TEXTURES PIXELATED, MERGES VERTEXES, AND TUNES SHADERS VALUES! ]]]]]
-
+#                                                                                                                     #
+#     [[[[[ THIS SCRIPT *ADDITIONALLY* MAKES TEXTURES PIXELATED, MERGES VERTEXES, AND TUNES SHADERS VALUES! ]]]]]     #
+#                                                                                                                     #
 # @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ 
 
 #                            /// RUNNING THIS SCRIPT ASSUMES YOU HAVE READ READ.MD! ///
@@ -41,7 +39,7 @@ bpy.ops.object.mode_set(mode='OBJECT')
 bpy.ops.transform.resize(value=(0.4, 0.6, 1.0))
 bpy.ops.object.transform_apply(scale=True)
 
-# Resizes collection to be about villager viewing height.  /////// DELETE LINES 44 - 50 IF OBJECT "DISAPPEARS!" ///////
+# Resizes collection to be about villager viewing height.  /////// DELETE LINES 42 - 48 IF OBJECT "DISAPPEARS!" ///////
 bpy.ops.transform.resize(value=(0.04, 0.04, 0.04))
 bpy.ops.object.transform_apply(scale=True)
 

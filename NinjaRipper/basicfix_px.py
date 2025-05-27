@@ -4,11 +4,9 @@ import bpy
 #                              [ Written for Blender 4.1, using NinjaRipper 2.8 ]
 
 # @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ 
-
-#               >>>>>>>>>>>>  THIS SCRIPT IS MEANT FOR >>OUTDOORS<< SCALING AND SKEWING!   <<<<<<<<<<<<
-
-#     [[[[[ THIS SCRIPT *ADDITIONALLY* MAKES TEXTURES PIXELATED, MERGES VERTEXES, AND TUNES SHADERS VALUES! ]]]]]
-
+#                                                                                                                     #
+#     [[[[[ THIS SCRIPT *ADDITIONALLY* MAKES TEXTURES PIXELATED, MERGES VERTEXES, AND TUNES SHADERS VALUES! ]]]]]     #
+#                                                                                                                     #
 # @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ 
 
 #                            /// RUNNING THIS SCRIPT ASSUMES YOU HAVE READ READ.MD! ///
