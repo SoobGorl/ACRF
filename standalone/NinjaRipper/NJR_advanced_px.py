@@ -5,7 +5,7 @@ import bpy
 
 # @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ 
 #                                                                                                                     #
-#       >>>>>>>>>>>>  CHANGE RENDER SAMPLING TO 512! THIS WILL OFFSET HOW NOISY THE EDGES ARE!  <<<<<<<<<<<<          #
+#     [[[[[ THIS SCRIPT *ADDITIONALLY* MAKES TEXTURES PIXELATED, MERGES VERTEXES, AND TUNES SHADERS VALUES! ]]]]]     #
 #                                                                                                                     #
 # @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ 
 
@@ -44,8 +44,8 @@ bpy.ops.transform.resize(value=(0.04, 0.04, 0.04))
 bpy.ops.object.transform_apply(scale=True)
 
 # Transforms object closer to 3D Grid's origin, and applies scale to object origin, calculating via surface.
-bpy.ops.transform.translate(value=(0, 0, 50))
 bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
+bpy.ops.object.location_clear(clear_delta=False)
 
 # Merge duplicated and disconnected vertexes.
 bpy.ops.object.mode_set(mode='EDIT')
@@ -58,18 +58,18 @@ for mat in bpy.data.materials:
     if mat.node_tree:
         for node in mat.node_tree.nodes:
             if node.type == 'TEX_IMAGE':
-                node.interpolation = 'Linear'
+                node.interpolation = 'Closest'
                 node.extension = 'MIRROR'                
                 from bpy_extras.node_shader_utils import PrincipledBSDFWrapper
                 
-# Sets blending mode to "Hashed," and connects alpha channel to BSDF for functional transparency.
+# Sets blending mode to "Clip," and connects alpha channel to BSDF for functional transparency.
 for collection in bpy.data.collections:
     for obj in collection.objects:
         if obj.type == 'MESH' and not obj.active_material == None:
             for item in obj.material_slots:
                 mat = bpy.data.materials[item.name]
                 if mat.use_nodes:                    
-                    mat.blend_method = 'HASHED'
+                    mat.blend_method = 'CLIP'
                     shader = mat.node_tree.nodes['Principled BSDF']
                     for node in mat.node_tree.nodes:
                         if node.type == 'TEX_IMAGE':

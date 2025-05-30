@@ -13,45 +13,42 @@ import bpy
 
 
 
-# Set scene to Object Mode and deselect all.
+# Scene Compatibility hack.
 bpy.ops.object.mode_set(mode='OBJECT')
-bpy.ops.object.select_all(action='DESELECT')
-
-# Sets "uv_5" to active UV selection, and enables it. If UVs are broken, edit this. Edit UVs manually if it's a mix.
-bpy.context.object.data.uv_layers['uv_5'].active = True
-bpy.context.object.data.uv_layers['uv_5'].active_render = True
-    
-# Join all separated objects into one object.
 bpy.ops.object.select_all()
-bpy.ops.object.join()  
+bpy.ops.object.select_all(action='DESELECT')
+bpy.ops.object.select_all()
 
-# Rotates collection, and applies scale.
-bpy.ops.transform.rotate(use_proportional_edit=True, orient_axis='X', value=-2.739)
-bpy.ops.transform.shear(orient_axis='X', value=-0.968)
-bpy.ops.object.transform_apply(scale=True)
+# Rotates the mesh.
+bpy.ops.transform.rotate(value=-1.39626, orient_axis='X')
 
-# Skews mesh data to be "normal."
+# Skews the mesh.
 bpy.ops.object.mode_set(mode='EDIT')
-bpy.ops.transform.shear(orient_axis='X',value=-0.991)
+bpy.ops.mesh.select_all(action = 'SELECT')
+bpy.ops.transform.shear(orient_axis='X',value=-2.746)
 bpy.ops.object.mode_set(mode='OBJECT')
 
-# Corrects scale inconsistencies.
-bpy.ops.transform.resize(value=(0.4, 0.6, 1.0))
+# Corrects scaling and flips model.
+bpy.ops.object.transform_apply(scale=True)
+bpy.ops.transform.resize(value=(1, 1, 2.87991))
+bpy.ops.transform.resize(value=(-1, 1, 1))
 bpy.ops.object.transform_apply(scale=True)
 
-# Resizes collection to be about villager viewing height.  /////// DELETE LINES 42 - 48 IF OBJECT "DISAPPEARS!" ///////
-bpy.ops.transform.resize(value=(0.04, 0.04, 0.04))
-bpy.ops.object.transform_apply(scale=True)
-
-# Transforms object closer to 3D Grid's origin, and applies scale to object origin, calculating via surface.
-bpy.ops.transform.translate(value=(0, 0, 50))
+# Shrinks model, applies scale to center of geometry, sends it to the center, and applies scale for compatability.
+bpy.ops.transform.resize(value=(0.01,0.01,0.01))
 bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
+bpy.ops.object.location_clear(clear_delta=False)
 
 # Merge duplicated and disconnected vertexes.
 bpy.ops.object.mode_set(mode='EDIT')
 bpy.ops.mesh.select_all(action = 'SELECT')
 bpy.ops.mesh.remove_doubles(threshold=0.0001)
 bpy.ops.object.mode_set(mode='OBJECT')
+
+
+
+
+
 
 # Sets texture extensions to "Mirror." Many textures use mirroring, and are only half-textures in imported files.
 for mat in bpy.data.materials:
@@ -100,5 +97,3 @@ for mat in bpy.data.materials:
                 for input in node.inputs:
                     if input.name == 'IOR':
                         input.default_value = 1
-                        
-# Done! :)
