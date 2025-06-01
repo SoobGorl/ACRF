@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Animal Crossing Ripper Fixer",
     "author": "Soup Girl",
-    "version": (0, 0, 1),
+    "version": (0, 0, 2),
     "blender": (2, 80, 0),
     "location": "3D Viewport > Sidebar > AC:RF",
     "description": "Cleans up 3DX and NinjaRipper Scenerips.",
@@ -206,16 +206,39 @@ class OPERATOR_linear(bpy.types.Operator):
                                     
         return {"FINISHED"}
     
+# //////////////////////////////////////////////////////////////////// EXTRAS SECTION
+
+class OPERATOR_shadow(bpy.types.Operator):
+    bl_idname = "extra.shadow"
+    bl_label = "a"
+    def execute(self,context):
+        bpy.context.area.ui_type = 'ShaderNodeTree'
+        bpy.ops.node.add_node(type="ShaderNodeValToRGB")
+        
+        bpy.context.object.active_material.node_tree.nodes['Color Ramp']
+        bpy.context.object.active_material.node_tree.nodes['Color Ramp'].color_ramp.elements[1].color = (0, 0, 0, 1)
+        bpy.context.object.active_material.node_tree.nodes['Color Ramp'].outputs[0]
+        bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].inputs[0]
+        bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].inputs['Base Color']
+        bpy.context.object.active_material.node_tree.links.new(
+            bpy.context.object.active_material.node_tree.nodes['Color Ramp'].outputs['Color'],
+            bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].inputs['Base Color']
+        )
+        
+        bpy.context.area.ui_type = 'VIEW_3D'
+        
+        return {"FINISHED"}
+    
 # //////////////////////////////////////////////////////////////////// UI SECTION
 
-class HelloWorldPanel:
+class ACRFPanel:
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "AC:RF"
     bl_label = "Animal Crossing Ripper Fixer"
     bl_options = {"DEFAULT_CLOSED"}
 
-class acrf_main(HelloWorldPanel, bpy.types.Panel):
+class acrf_main(ACRFPanel, bpy.types.Panel):
     bl_idname = "acrf_main"
     bl_label = "AC:RF"
 
@@ -223,41 +246,48 @@ class acrf_main(HelloWorldPanel, bpy.types.Panel):
         layout = self.layout
         layout.label(text="Animal Crossing Ripper Fixer :D")
 
-class meshfix(HelloWorldPanel, bpy.types.Panel):
+class meshfix(ACRFPanel, bpy.types.Panel):
     bl_parent_id = "acrf_main"
     bl_label = "Mesh Fixes (NR/3DX)"
+    
 
     def draw(self, context):
         layout = self.layout
         self.layout.separator()
-        layout.operator("mesh.nrfix", text="NinjaRipper Mesh fix")
+        layout.operator("mesh.nrfix", text="NinjaRipper Mesh fix", icon="SURFACE_DATA")
         self.layout.separator()
-        layout.operator("mesh.3dxfix", text="3DX Ripper Mesh fix")
+        layout.operator("mesh.3dxfix", text="3DX Ripper Mesh fix", icon="SURFACE_DATA")
         self.layout.separator()
+        layout=self.layout
 
-class texturefix(HelloWorldPanel, bpy.types.Panel):
+class texturefix(ACRFPanel, bpy.types.Panel):
     bl_parent_id = "acrf_main"
     bl_label = "Texture Fixes + Tweaks"
 
     def draw(self, context):
         layout = self.layout
         self.layout.separator()
-        layout.operator("texture.bsdftweak", text="BSDF Tweaks")
+        layout.operator("texture.bsdftweak", text="BSDF Tweaks", icon="MATERIAL_DATA")
         self.layout.separator()
-        layout.operator("texture.mirror", text="Texture Mirror")
+        layout.operator("texture.mirror", text="Texture Mirror", icon="MOD_MIRROR")
         self.layout.separator()
-        layout.operator("texture.closest", text="Closest + Alpha Clip")
+        layout.operator("texture.closest", text="Closest + Alpha Clip", icon="IPO_CONSTANT")
         self.layout.separator()
-        layout.operator("texture.linear", text="Linear + Alpha Hashed")
+        layout.operator("texture.linear", text="Linear + Alpha Hashed", icon="IPO_LINEAR")
         self.layout.separator()
         
-class extras(HelloWorldPanel, bpy.types.Panel):
+class extras(ACRFPanel, bpy.types.Panel):
     bl_parent_id = "acrf_main"
     bl_label = "Extra (Shadows, Water, etc)"
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text="")
+        layout.operator("extra.shadow", text="Selection - Shadows", icon="MOD_CAST")
+        self.layout.separator()
+        layout.operator("extra.water", text="Selection - Water Texture", icon="MATFLUID")
+        self.layout.separator()
+        layout.operator("extra.zfight", text="Selection - Zfighting Fix", icon="FILE_VOLUME")
+        self.layout.separator()
 
 classes = (
     acrf_main,
@@ -269,7 +299,10 @@ classes = (
     OPERATOR_bsdftweak,
     OPERATOR_mirror,
     OPERATOR_closest,
-    OPERATOR_linear
+    OPERATOR_linear,
+    OPERATOR_shadow,
+    #OPERATOR_water,
+    #OPERATOR_zfight
 )
 
 def register():
