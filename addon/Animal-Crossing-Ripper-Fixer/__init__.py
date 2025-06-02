@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Animal Crossing Ripper Fixer",
     "author": "Soup Girl",
-    "version": (0, 0, 2),
+    "version": (0, 0, 4),
     "blender": (2, 80, 0),
     "location": "3D Viewport > Sidebar > AC:RF",
     "description": "Cleans up 3DX and NinjaRipper Scenerips.",
@@ -359,7 +359,43 @@ class OPERATOR_water(bpy.types.Operator):
                                 material.node_tree.links.remove(input_socket.links[0])
         
         return {"FINISHED"}
+    
 
+# ZFIGHT FIX
+class OPERATOR_zfight(bpy.types.Operator):
+    bl_idname = "extra.zfight"
+    bl_label = "zfight"
+    def execute(self,context):
+
+        for obj in bpy.context.selected_objects:
+            bpy.ops.mesh.dissolve_limited()
+            bpy.ops.mesh.flip_normals()
+            bpy.context.object.active_material.use_backface_culling = True
+
+        return {"FINISHED"}
+    
+
+# SHADE SELECTED FLAT
+class OPERATOR_flat(bpy.types.Operator):
+    bl_idname = "extra.flat"
+    bl_label = "flat"
+    def execute(self,context):
+
+        for obj in bpy.context.selected_objects:
+            bpy.ops.mesh.faces_shade_flat()
+            
+        return {"FINISHED"}
+
+# SHADE SELECTED SMOOTH
+class OPERATOR_smooth(bpy.types.Operator):
+    bl_idname = "extra.smooth"
+    bl_label = "smooth"
+    def execute(self,context):
+
+        for obj in bpy.context.selected_objects:
+            bpy.ops.mesh.faces_shade_smooth()
+            
+        return {"FINISHED"}
     
 # //////////////////////////////////////////////////////////////////// UI SECTION
 
@@ -420,6 +456,10 @@ class extras(ACRFPanel, bpy.types.Panel):
         self.layout.separator()
         layout.operator("extra.zfight", text="Selection - Zfighting Fix", icon="FILE_VOLUME")
         self.layout.separator()
+        layout.operator("extra.flat", text="Selection - Shade Flat", icon="LIGHT_HEMI")
+        self.layout.separator()
+        layout.operator("extra.smooth", text="Selection - Shade Smooth", icon="LIGHT_AREA")
+        self.layout.separator()
 
 classes = (
     acrf_main,
@@ -434,7 +474,9 @@ classes = (
     OPERATOR_linear,
     OPERATOR_shadow,
     OPERATOR_water,
-    #OPERATOR_zfight
+    OPERATOR_zfight,
+    OPERATOR_flat,
+    OPERATOR_smooth
 )
 
 def register():
