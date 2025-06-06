@@ -214,9 +214,49 @@ class OPERATOR_shadow(bpy.types.Operator):
     bl_idname = "extra.shadow"
     bl_label = "shadow"
     def execute(self,context):
-        bpy.context.area.ui_type = 'ShaderNodeTree'
-        bpy.ops.node.add_node(type="ShaderNodeValToRGB")
         
+        bpy.ops.mesh.separate(type = 'SELECTED')
+        
+        material_name = 'Material'  # choose your material_name here
+
+        color = [
+        (0x000000, 1),  # red = 231, green = 98, blue = 84, alpha = 1, allow lower case
+        (0x000000, 1),
+        ]
+
+        def to_blender_color(c):    # gamma correction
+            c = min(max(0, c), 255) / 255
+            return c / 12.92 if c < 0.04045 else math.pow((c + 0.055) / 1.055, 2.4)
+
+        blend_color = [(
+            to_blender_color(c[0] >> 16),
+            to_blender_color(c[0] >> 8 & 0xff), 
+            to_blender_color(c[0] & 0xff),
+            c[1]) for c in color]
+        color_count = len(color)
+
+        for e in blend_color:
+            print(e)
+
+        mat     = bpy.data.materials[material_name] # choose material name here
+        tree    = mat.node_tree
+        nodes   = tree.nodes
+        node    = nodes.new(type='ShaderNodeValToRGB') # add color ramp node
+
+        ramp    = node.color_ramp
+        el      = ramp.elements
+
+        dis     = 1 / (color_count - 1)
+        x       = dis
+        for r in range(color_count - 2):
+            el.new(x)
+            x += dis
+
+        for i, e in enumerate(el):
+            e.color = blend_color[i]
+            
+        bpy.data.materials['Material'].node_tree.nodes["Color Ramp"].color_ramp.elements[1].position = 0.313636
+
         bpy.context.object.active_material.node_tree.nodes['Color Ramp']
         bpy.context.object.active_material.node_tree.nodes['Color Ramp'].color_ramp.elements[1].color = (0, 0, 0, 1)
         bpy.context.object.active_material.node_tree.nodes['Color Ramp'].outputs[0]
@@ -226,8 +266,6 @@ class OPERATOR_shadow(bpy.types.Operator):
             bpy.context.object.active_material.node_tree.nodes['Color Ramp'].outputs['Color'],
             bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].inputs['Base Color']
         )
-        
-        bpy.context.area.ui_type = 'VIEW_3D'
         
         return {"FINISHED"}
 
@@ -404,7 +442,7 @@ class ACRFPanel:
     bl_region_type = "UI"
     bl_category = "AC:RF"
     bl_label = "Animal Crossing Ripper Fixer"
-    bl_options = {"DEFAULT_CLOSED"}
+    bl_options = {"HEADER_LAYOUT_EXPAND"}
 
 class acrf_main(ACRFPanel, bpy.types.Panel):
     bl_idname = "acrf_main"
