@@ -76,36 +76,40 @@ class OPERATOR_3DX_meshfix(bpy.types.Operator):
     bl_label = "3DX Meshfix"
     def execute(self,context):
         
-        # Scene compatibility hack to run script, regardless if script is ran in edit mode, or without an active object.
         if len(bpy.context.scene.objects) == 0:
             return {"FINISHED"}
                     
         bpy.context.view_layer.objects.active = bpy.context.scene.objects[0]
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
+        
+        # Slight hack.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.select_all()
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.object.select_all()
 
         # Rotates the mesh.
         bpy.ops.transform.rotate(value=-1.39626, orient_axis='X')
 
-        # Skews mesh data to be "normal."
+        # Skews the mesh.
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action = 'SELECT')
         bpy.ops.transform.shear(orient_axis='X',value=-2.746)
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        # Corrects scaling and mirrors/flips model.
+        # Corrects scaling and flips model.
         bpy.ops.object.transform_apply(scale=True)
         bpy.ops.transform.resize(value=(1, 1, 2.87991))
         bpy.ops.transform.resize(value=(-1, 1, 1))
         bpy.ops.object.transform_apply(scale=True)
 
-        # Shrinks model, applies origin to center of geometry, sends it to the center, and applies scale for compatability.
+        # Shrinks model, applies scale to center of geometry, sends it to the center, and applies scale for compatability.
         bpy.ops.transform.resize(value=(0.01,0.01,0.01))
         bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
         bpy.ops.object.location_clear(clear_delta=False)
-        bpy.ops.object.transform_apply(scale=True)
 
-        # Merge duplicated and disconnected vertexes. Remove lines 109-112 if this creates issues.
+        # Merge duplicated and disconnected vertexes. Remove lines 113-116 if this creates issues.
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action = 'SELECT')
         bpy.ops.mesh.remove_doubles(threshold=0.0001)
