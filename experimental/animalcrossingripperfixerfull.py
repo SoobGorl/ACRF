@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Animal Crossing Ripper Fixer",
     "author": "Soup Girl",
-    "version": (0, 0, 4),
+    "version": (0, 0, 7),
     "blender": (2, 80, 0),
     "location": "3D Viewport > Sidebar > AC:RF",
     "description": "Cleans up 3DX and NinjaRipper Scenerips.",
