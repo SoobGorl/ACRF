@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Animal Crossing Ripper Fixer",
-    "author": "Soup Girl",
-    "version": (0, 0, 7),
+    "author": "Soup Girl, Salvage",
+    "version": (0, 1, 0),
     "blender": (2, 80, 0),
     "location": "3D Viewport > Sidebar > AC:RF",
     "description": "Cleans up 3DX and NinjaRipper Scenerips.",
@@ -9,7 +9,9 @@ bl_info = {
     "wiki_url": "https://github.com/SoobGorl/ACRF"
 }
 
-import bpy,  math
+import bpy
+import math
+import bmesh
 
 # //////////////////////////////////////////////////////////////////// NR SECTION
 
@@ -24,8 +26,9 @@ class OPERATOR_NR_meshfix(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
 
         # Sets "uv_5" to active UV selection, and enables it. If UVs are broken, edit this. Edit UVs manually if it's a mix.
-        bpy.context.object.data.uv_layers['uv_5'].active = True
-        bpy.context.object.data.uv_layers['uv_5'].active_render = True
+        if 'uv_5' in bpy.context.object.data.uv_layers:
+            bpy.context.object.data.uv_layers['uv_5'].active = True
+            bpy.context.object.data.uv_layers['uv_5'].active_render = True
             
         # Join all separated objects into one object.
         bpy.ops.object.select_all()
@@ -106,34 +109,26 @@ class OPERATOR_3DX_meshfix(bpy.types.Operator):
 # //////////////////////////////////////////////////////////////////// TEXTURE SECTION
 
 # Sets Metallic, Roughness, and IOR to values similar to those found in-game.
+
+def bsdf_mod(mat):
+    if hasattr(mat.node_tree, "nodes"):
+        for node in mat.node_tree.nodes:
+            if node.type == 'BSDF_PRINCIPLED':
+                for input in node.inputs:
+                    if input.name == 'Roughness':
+                        input.default_value = 1
+                    if input.name == 'Metallic':
+                        input.default_value = 0
+                    if input.name == 'IOR':
+                        input.default_value = 1
+
 class OPERATOR_bsdftweak(bpy.types.Operator):
     bl_idname = "texture.bsdftweak"
     bl_label = "BSDF Tweaks"
     def execute(self,context):
         #ROUGHNESS
         for mat in bpy.data.materials:
-            if hasattr(mat.node_tree, "nodes"):
-                for node in mat.node_tree.nodes:
-                    if node.type == 'BSDF_PRINCIPLED':
-                        for input in node.inputs:
-                            if input.name == 'Roughness':
-                                input.default_value = 1
-        #METALLIC
-        for mat in bpy.data.materials:
-            if hasattr(mat.node_tree, "nodes"):
-                for node in mat.node_tree.nodes:
-                    if node.type == 'BSDF_PRINCIPLED':
-                        for input in node.inputs:
-                            if input.name == 'Metallic':
-                                input.default_value = 0
-        #IOR                     
-        for mat in bpy.data.materials:
-            if hasattr(mat.node_tree, "nodes"):
-                for node in mat.node_tree.nodes:
-                    if node.type == 'BSDF_PRINCIPLED':
-                        for input in node.inputs:
-                            if input.name == 'IOR':
-                                input.default_value = 1
+            bsdf_mod(mat)
 
         return {"FINISHED"}
 
@@ -210,63 +205,77 @@ class OPERATOR_linear(bpy.types.Operator):
 
 # SHADOW
 
+def get_selected_materials():    
+    obj = bpy.context.edit_object
+    if obj is None or obj.type != 'MESH':
+        return []
+
+    mesh = bmesh.from_edit_mesh(obj.data)
+    selected_materials = set()
+
+    for face in mesh.faces:
+        if face.select:
+            material_index = face.material_index
+            if material_index < len(obj.material_slots):
+                material = obj.material_slots[material_index].material
+                if material:
+                    selected_materials.add(material)
+
+    return list(selected_materials)
+
 class OPERATOR_shadow(bpy.types.Operator):
     bl_idname = "extra.shadow"
     bl_label = "shadow"
     def execute(self,context):
-        
-        bpy.ops.mesh.separate(type = 'SELECTED')
-        
-        material_name = 'Material'  # choose your material_name here
+        for mat in get_selected_materials():
 
-        color = [
-        (0x000000, 1),  # red = 231, green = 98, blue = 84, alpha = 1, allow lower case
-        (0x000000, 1),
-        ]
+            color = [
+            (0x000000, 1),  # red = 231, green = 98, blue = 84, alpha = 1, allow lower case
+            (0x000000, 1),
+            ]
 
-        def to_blender_color(c):    # gamma correction
-            c = min(max(0, c), 255) / 255
-            return c / 12.92 if c < 0.04045 else math.pow((c + 0.055) / 1.055, 2.4)
+            def to_blender_color(c):    # gamma correction
+                c = min(max(0, c), 255) / 255
+                return c / 12.92 if c < 0.04045 else math.pow((c + 0.055) / 1.055, 2.4)
 
-        blend_color = [(
-            to_blender_color(c[0] >> 16),
-            to_blender_color(c[0] >> 8 & 0xff), 
-            to_blender_color(c[0] & 0xff),
-            c[1]) for c in color]
-        color_count = len(color)
+            blend_color = [(
+                to_blender_color(c[0] >> 16),
+                to_blender_color(c[0] >> 8 & 0xff), 
+                to_blender_color(c[0] & 0xff),
+                c[1]) for c in color]
+            color_count = len(color)
 
-        for e in blend_color:
-            print(e)
+            for e in blend_color:
+                print(e)
+                
+            tree    = mat.node_tree
+            nodes   = tree.nodes
+            node    = nodes.new(type='ShaderNodeValToRGB') # add color ramp node
 
-        mat     = bpy.data.materials[material_name] # choose material name here
-        tree    = mat.node_tree
-        nodes   = tree.nodes
-        node    = nodes.new(type='ShaderNodeValToRGB') # add color ramp node
+            ramp    = node.color_ramp
+            el      = ramp.elements
 
-        ramp    = node.color_ramp
-        el      = ramp.elements
+            dis     = 1 / (color_count - 1)
+            x       = dis
+            for r in range(color_count - 2):
+                el.new(x)
+                x += dis
 
-        dis     = 1 / (color_count - 1)
-        x       = dis
-        for r in range(color_count - 2):
-            el.new(x)
-            x += dis
+            for i, e in enumerate(el):
+                e.color = blend_color[i]
+                
+            nodes["Color Ramp"].color_ramp.elements[1].position = 0.313636
 
-        for i, e in enumerate(el):
-            e.color = blend_color[i]
+            nodes['Color Ramp']
+            nodes['Color Ramp'].color_ramp.elements[1].color = (0, 0, 0, 1)
+            nodes['Color Ramp'].outputs[0]
+            nodes['Principled BSDF'].inputs[0]
+            nodes['Principled BSDF'].inputs['Base Color']
+            tree.links.new(
+                nodes['Color Ramp'].outputs['Color'],
+                nodes['Principled BSDF'].inputs['Base Color']
+            )
             
-        bpy.data.materials['Material'].node_tree.nodes["Color Ramp"].color_ramp.elements[1].position = 0.313636
-
-        bpy.context.object.active_material.node_tree.nodes['Color Ramp']
-        bpy.context.object.active_material.node_tree.nodes['Color Ramp'].color_ramp.elements[1].color = (0, 0, 0, 1)
-        bpy.context.object.active_material.node_tree.nodes['Color Ramp'].outputs[0]
-        bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].inputs[0]
-        bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].inputs['Base Color']
-        bpy.context.object.active_material.node_tree.links.new(
-            bpy.context.object.active_material.node_tree.nodes['Color Ramp'].outputs['Color'],
-            bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].inputs['Base Color']
-        )
-        
         return {"FINISHED"}
 
 # WATER. WATER MATERIAL MUST BE NAMED "MATERIAL" TO WORK! OTHERWISE IT WONT WORK!!
@@ -275,127 +284,137 @@ class OPERATOR_water(bpy.types.Operator):
     bl_idname = "extra.water"
     bl_label = "water"
     def execute(self,context):
-        
-        bpy.ops.mesh.separate(type = 'SELECTED')
-        
-        material_name = 'Material'  # choose your material_name here
+        for mat in get_selected_materials():
 
-        color = [
-        (0x1000D1, 1),  # red = 231, green = 98, blue = 84, alpha = 1, allow lower case
-        (0xFFFFFF, 1),
-        ]
+            color = [
+            (0x1000D1, 1),  # red = 231, green = 98, blue = 84, alpha = 1, allow lower case
+            (0xFFFFFF, 1),
+            ]
 
-        def to_blender_color(c):    # gamma correction
-            c = min(max(0, c), 255) / 255
-            return c / 12.92 if c < 0.04045 else math.pow((c + 0.055) / 1.055, 2.4)
+            def to_blender_color(c):    # gamma correction
+                c = min(max(0, c), 255) / 255
+                return c / 12.92 if c < 0.04045 else math.pow((c + 0.055) / 1.055, 2.4)
 
-        blend_color = [(
-            to_blender_color(c[0] >> 16),
-            to_blender_color(c[0] >> 8 & 0xff), 
-            to_blender_color(c[0] & 0xff),
-            c[1]) for c in color]
-        color_count = len(color)
+            blend_color = [(
+                to_blender_color(c[0] >> 16),
+                to_blender_color(c[0] >> 8 & 0xff), 
+                to_blender_color(c[0] & 0xff),
+                c[1]) for c in color]
+            color_count = len(color)
 
-        for e in blend_color:
-            print(e)
+            for e in blend_color:
+                print(e)
+                
+            tree    = mat.node_tree
+            nodes   = tree.nodes
+            node    = nodes.new(type='ShaderNodeValToRGB') # add color ramp node
 
-        mat     = bpy.data.materials[material_name] # choose material name here
-        tree    = mat.node_tree
-        nodes   = tree.nodes
-        node    = nodes.new(type='ShaderNodeValToRGB') # add color ramp node
+            ramp    = node.color_ramp
+            el      = ramp.elements
 
-        ramp    = node.color_ramp
-        el      = ramp.elements
+            dis     = 1 / (color_count - 1)
+            x       = dis
+            for r in range(color_count - 2):
+                el.new(x)
+                x += dis
 
-        dis     = 1 / (color_count - 1)
-        x       = dis
-        for r in range(color_count - 2):
-            el.new(x)
-            x += dis
+            for i, e in enumerate(el):
+                e.color = blend_color[i]
+                
+            nodes["Color Ramp"].color_ramp.elements[1].position = 0.313636
 
-        for i, e in enumerate(el):
-            e.color = blend_color[i]
+            nodes.new(type="ShaderNodeBsdfPrincipled")
+
+
+            nodes['Color Ramp']
+            nodes['Color Ramp'].color_ramp.elements[1].color = (1, 1, 1, 1)
+            nodes['Color Ramp'].outputs[0]
+            nodes['Principled BSDF'].inputs[0]
+            nodes['Principled BSDF'].inputs['Base Color']
+            tree.links.new(
+                nodes['Color Ramp'].outputs['Color'],
+                nodes['Principled BSDF'].inputs['Base Color']
+            )
+
+            tree.nodes['Image Texture']
+            nodes['Image Texture'].outputs[0]
+            nodes['Color Ramp'].inputs[0]
+            nodes['Color Ramp'].inputs['Fac']
+            tree.links.new(
+                nodes['Image Texture'].outputs['Color'],
+                nodes['Color Ramp'].inputs['Fac']
+            )
+
+            nodes.new(type='ShaderNodeBsdfTransparent')
+
+            nodes.new(type='ShaderNodeMixShader')
+
+
+            nodes['Principled BSDF']
+            nodes['Principled BSDF'].outputs[0]
+            nodes['Mix Shader'].inputs[1]
+            nodes['Mix Shader'].inputs['Shader']
+            tree.links.new(
+                nodes['Principled BSDF'].outputs['BSDF'],
+                nodes['Mix Shader'].inputs['Shader']
+            )
+
+            nodes['Transparent BSDF']
+            nodes['Transparent BSDF'].outputs[0]
+            nodes['Mix Shader'].inputs[2]
+            nodes['Mix Shader'].inputs['Shader_001']
+            tree.links.new(
+                nodes['Transparent BSDF'].outputs['BSDF'],
+                nodes['Mix Shader'].inputs['Shader_001']
+            )
+
+
+            nodes['Mix Shader']
+            nodes['Mix Shader'].outputs[0]
+            nodes['Material Output'].inputs[0]
+            nodes['Material Output'].inputs['Surface']
+            tree.links.new(
+                nodes['Mix Shader'].outputs['Shader'],
+                nodes['Material Output'].inputs['Surface']
+            )
             
-        bpy.data.materials['Material'].node_tree.nodes["Color Ramp"].color_ramp.elements[1].position = 0.313636
+            org_obj_list = {obj.name for obj in context.selected_objects}
+                        
+            bpy.ops.mesh.separate(type = 'SELECTED')
 
-        nodes.new(type="ShaderNodeBsdfPrincipled")
+            bpy.ops.object.editmode_toggle()
+            # Switch back to object mode from edit mode
 
+            # Those separated object will also be selected now
+            # We then check if selected object is the one we saved before, then deselect it.
+            for obj in context.selected_objects:
+                if obj and obj.name in org_obj_list:
+                    # Deselect selected object
+                    obj.select_set(False)
+                else:
+                    # Set the new created object to active
+                    context.view_layer.objects.active = obj
 
-        bpy.context.object.active_material.node_tree.nodes['Color Ramp']
-        bpy.context.object.active_material.node_tree.nodes['Color Ramp'].color_ramp.elements[1].color = (1, 1, 1, 1)
-        bpy.context.object.active_material.node_tree.nodes['Color Ramp'].outputs[0]
-        bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].inputs[0]
-        bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].inputs['Base Color']
-        bpy.context.object.active_material.node_tree.links.new(
-            bpy.context.object.active_material.node_tree.nodes['Color Ramp'].outputs['Color'],
-            bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].inputs['Base Color']
-        )
+            bpy.ops.object.modifier_add(type='ARRAY')
+            bpy.context.object.modifiers["Array"].relative_offset_displace[2] = -153.593
+            bpy.context.object.modifiers["Array"].relative_offset_displace[0] = 0
+            bpy.context.object.modifiers["Array"].offset_u = 0.380952
+            bpy.context.object.modifiers["Array"].offset_v = -0.693878
+            bpy.context.object.modifiers["Array"].count = 4
 
-        bpy.context.object.active_material.node_tree.nodes['Image Texture']
-        bpy.context.object.active_material.node_tree.nodes['Image Texture'].outputs[0]
-        bpy.context.object.active_material.node_tree.nodes['Color Ramp'].inputs[0]
-        bpy.context.object.active_material.node_tree.nodes['Color Ramp'].inputs['Fac']
-        bpy.context.object.active_material.node_tree.links.new(
-            bpy.context.object.active_material.node_tree.nodes['Image Texture'].outputs['Color'],
-            bpy.context.object.active_material.node_tree.nodes['Color Ramp'].inputs['Fac']
-        )
-
-        nodes.new(type='ShaderNodeBsdfTransparent')
-
-        nodes.new(type='ShaderNodeMixShader')
-
-
-        bpy.context.object.active_material.node_tree.nodes['Principled BSDF']
-        bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].outputs[0]
-        bpy.context.object.active_material.node_tree.nodes['Mix Shader'].inputs[1]
-        bpy.context.object.active_material.node_tree.nodes['Mix Shader'].inputs['Shader']
-        bpy.context.object.active_material.node_tree.links.new(
-            bpy.context.object.active_material.node_tree.nodes['Principled BSDF'].outputs['BSDF'],
-            bpy.context.object.active_material.node_tree.nodes['Mix Shader'].inputs['Shader']
-        )
-
-        bpy.context.object.active_material.node_tree.nodes['Transparent BSDF']
-        bpy.context.object.active_material.node_tree.nodes['Transparent BSDF'].outputs[0]
-        bpy.context.object.active_material.node_tree.nodes['Mix Shader'].inputs[2]
-        bpy.context.object.active_material.node_tree.nodes['Mix Shader'].inputs['Shader_001']
-        bpy.context.object.active_material.node_tree.links.new(
-            bpy.context.object.active_material.node_tree.nodes['Transparent BSDF'].outputs['BSDF'],
-            bpy.context.object.active_material.node_tree.nodes['Mix Shader'].inputs['Shader_001']
-        )
-
-
-        bpy.context.object.active_material.node_tree.nodes['Mix Shader']
-        bpy.context.object.active_material.node_tree.nodes['Mix Shader'].outputs[0]
-        bpy.context.object.active_material.node_tree.nodes['Material Output'].inputs[0]
-        bpy.context.object.active_material.node_tree.nodes['Material Output'].inputs['Surface']
-        bpy.context.object.active_material.node_tree.links.new(
-            bpy.context.object.active_material.node_tree.nodes['Mix Shader'].outputs['Shader'],
-            bpy.context.object.active_material.node_tree.nodes['Material Output'].inputs['Surface']
-        )
-
-
-        bpy.ops.object.modifier_add(type='ARRAY')
-        bpy.context.object.modifiers["Array"].relative_offset_displace[2] = -153.593
-        bpy.context.object.modifiers["Array"].relative_offset_displace[0] = 0
-        bpy.context.object.modifiers["Array"].offset_u = 0.380952
-        bpy.context.object.modifiers["Array"].offset_v = -0.693878
-        bpy.context.object.modifiers["Array"].count = 4
-
-        mat.blend_method = 'BLEND'
-        
-        # Iterate through all materials (THIS ITERATES THROUGH EVERYTHING! I ONLY WANT THE SELECTED MATERIAL!!!!)
-        for material in bpy.data.materials:
-            if material.use_nodes:
-                nodes = material.node_tree.nodes
-                # Iterate through all nodes in the material node tree
-                for node in nodes:
-                    # Check if the node is a Principled BSDF
-                    if isinstance(node, bpy.types.ShaderNodeBsdfPrincipled):
-                        # Disconnect the specular input link from the Principled BSDF node
-                        for input_socket in node.inputs:
-                            if input_socket.is_linked and input_socket.name == 'Alpha':
-                                material.node_tree.links.remove(input_socket.links[0])
-        
+            mat.blend_method = 'BLEND'
+            
+            bsdf_mod(mat)
+            
+            # Iterate through all materials (THIS ITERATES THROUGH EVERYTHING! I ONLY WANT THE SELECTED MATERIAL!!!!)
+            for node in nodes:
+                # Check if the node is a Principled BSDF
+                if isinstance(node, bpy.types.ShaderNodeBsdfPrincipled):
+                    # Disconnect the specular input link from the Principled BSDF node
+                    for input_socket in node.inputs:
+                        if input_socket.is_linked and input_socket.name == 'Alpha':
+                            tree.links.remove(input_socket.links[0])
+            
         return {"FINISHED"}
     
 
