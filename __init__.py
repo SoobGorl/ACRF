@@ -60,11 +60,13 @@ class OPERATOR_NR_meshfix(bpy.types.Operator):
         bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
         bpy.ops.object.location_clear(clear_delta=False)
 
-        # Merge duplicated and disconnected vertexes. Remove lines 64-67 if this creates issues.
+        # Merge duplicated and disconnected vertexes, and shades smooth. Remove lines 64-68 if this creates issues.
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action = 'SELECT')
+        bpy.ops.mesh.faces_shade_smooth()
         bpy.ops.mesh.remove_doubles(threshold=0.0001)
         bpy.ops.object.mode_set(mode='OBJECT')
+        )
 
         return {"FINISHED"}
 
@@ -109,9 +111,10 @@ class OPERATOR_3DX_meshfix(bpy.types.Operator):
         bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
         bpy.ops.object.location_clear(clear_delta=False)
 
-        # Merge duplicated and disconnected vertexes. Remove lines 113-116 if this creates issues.
+        # Merge duplicated and disconnected vertexes, and shades smooth. Remove lines 115-119 if this creates issues.
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action = 'SELECT')
+        bpy.ops.mesh.faces_shade_smooth()
         bpy.ops.mesh.remove_doubles(threshold=0.0001)
         bpy.ops.object.mode_set(mode='OBJECT')
         
