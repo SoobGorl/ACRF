@@ -66,7 +66,6 @@ class OPERATOR_NR_meshfix(bpy.types.Operator):
         bpy.ops.mesh.faces_shade_smooth()
         bpy.ops.mesh.remove_doubles(threshold=0.0001)
         bpy.ops.object.mode_set(mode='OBJECT')
-        )
 
         return {"FINISHED"}
 
