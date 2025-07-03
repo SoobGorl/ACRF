@@ -1,7 +1,7 @@
 bl_info = {
-    "name": "Animal Crossing Ripper Fixer",
+    "name": "Animal Crossing Ripper Fixer (ACRF)",
     "author": "Soup Girl, Salvage",
-    "version": (0, 1, 0),
+    "version": (0, 1, 1),
     "blender": (2, 80, 0),
     "location": "3D Viewport > Sidebar > AC:RF",
     "description": "Cleans up 3DX and NinjaRipper Scenerips.",
@@ -51,6 +51,9 @@ class OPERATOR_NR_meshfix(bpy.types.Operator):
         # Corrects scale inconsistencies.
         bpy.ops.transform.resize(value=(0.4, 0.6, 1.0))
         bpy.ops.object.transform_apply(scale=True)
+        
+        # Flips model. Delete this line if model somehow imports un-mirrored.
+        bpy.ops.transform.resize(value=(-1, 1, 1))
 
         # Resizes collection to be about villager viewing height.
         bpy.ops.transform.resize(value=(0.04, 0.04, 0.04))
@@ -485,6 +488,188 @@ class OPERATOR_smooth(bpy.types.Operator):
             
         return {"FINISHED"}
     
+# //////////////////////////////////////////////////////////////////// EXTRA CAMERA ANGLES SECTION
+
+# STARTUP SCREEN
+class OPERATOR_startup(bpy.types.Operator):
+    bl_idname = "camnr.startup"
+    bl_label = "NR Startup"
+    def execute(self,context):
+        
+        # Scene compatibility hack to run script, regardless if script is ran in edit mode, or without an active object.
+        if len(bpy.context.scene.objects) == 0:
+            return {"FINISHED"}
+                    
+        bpy.context.view_layer.objects.active = bpy.context.scene.objects[0]
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.select_all(action='DESELECT')
+
+        # Sets UV to "uv_5" and renders it. If >ALL< UVs are broken, edit this. Edit UVs manually if it's a mix.
+        if 'uv_5' in bpy.context.object.data.uv_layers:
+            bpy.context.object.data.uv_layers['uv_5'].active = True
+            bpy.context.object.data.uv_layers['uv_5'].active_render = True
+            
+        # Joins all separated objects into one mesh, as 3DX and NR meshes are a tossup.
+        bpy.ops.object.select_all()
+        bpy.ops.object.join()  
+
+        # Rotates collection, and applies scale.
+        bpy.ops.transform.rotate(use_proportional_edit=True, orient_axis='X', value=-2.05898)
+        bpy.ops.object.transform_apply(scale=True)
+
+        # Skews mesh data to be "normal."
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.transform.shear(orient_axis='X',value=-0.0832282)
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Corrects scale inconsistencies.
+        bpy.ops.transform.resize(value=(0.823, 1, 1))
+        bpy.ops.object.transform_apply(scale=True)
+        
+        # Flips model. Delete this line if model somehow imports un-mirrored.
+        bpy.ops.transform.resize(value=(-1, 1, 1))
+
+        # Resizes collection to be about villager viewing height.
+        bpy.ops.transform.resize(value=(0.04, 0.04, 0.04))
+        bpy.ops.object.transform_apply(scale=True)
+
+        # Transforms object closer to 3D Grid's origin.
+        bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
+        bpy.ops.object.location_clear(clear_delta=False)
+
+        # Merge duplicated and disconnected vertexes, and shades smooth. Remove lines 64-68 if this creates issues.
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action = 'SELECT')
+        bpy.ops.mesh.faces_shade_smooth()
+        bpy.ops.mesh.remove_doubles(threshold=0.0001)
+        bpy.ops.object.mode_set(mode='OBJECT')
+        
+        return {"FINISHED"}
+    
+# ROVER INTRO (FRONT FACING ONLY)
+class OPERATOR_rover(bpy.types.Operator):
+    bl_idname = "camnr.rover"
+    bl_label = "NR Rover"
+    def execute(self,context):
+        
+        # Scene compatibility hack to run script, regardless if script is ran in edit mode, or without an active object.
+        if len(bpy.context.scene.objects) == 0:
+            return {"FINISHED"}
+                    
+        bpy.context.view_layer.objects.active = bpy.context.scene.objects[0]
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.select_all(action='DESELECT')
+
+        # Sets UV to "uv_5" and renders it. If >ALL< UVs are broken, edit this. Edit UVs manually if it's a mix.
+        if 'uv_5' in bpy.context.object.data.uv_layers:
+            bpy.context.object.data.uv_layers['uv_5'].active = True
+            bpy.context.object.data.uv_layers['uv_5'].active_render = True
+            
+        # Joins all separated objects into one mesh, as 3DX and NR meshes are a tossup.
+        bpy.ops.object.select_all()
+        bpy.ops.object.join()  
+
+        # Rotates collection, and applies scale.
+        bpy.ops.transform.rotate(use_proportional_edit=True, orient_axis='X', value=-1.6402)
+        bpy.ops.object.transform_apply(scale=True)
+
+        # Skews mesh data to be "normal."
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.transform.shear(orient_axis='X',value=-0.0832282)
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Corrects scale inconsistencies.
+        bpy.ops.transform.resize(value=(0.742763, 1, 1))
+        bpy.ops.object.transform_apply(scale=True)
+        
+        # Flips model. Delete this line if model somehow imports un-mirrored.
+        bpy.ops.transform.resize(value=(-1, 1, 1))
+
+        # Resizes collection to be about villager viewing height.
+        bpy.ops.transform.resize(value=(0.04, 0.04, 0.04))
+        bpy.ops.object.transform_apply(scale=True)
+
+        # Transforms object closer to 3D Grid's origin.
+        bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
+        bpy.ops.object.location_clear(clear_delta=False)
+
+        # Merge duplicated and disconnected vertexes, and shades smooth. Remove lines 64-68 if this creates issues.
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action = 'SELECT')
+        bpy.ops.mesh.faces_shade_smooth()
+        bpy.ops.mesh.remove_doubles(threshold=0.0001)
+        bpy.ops.object.mode_set(mode='OBJECT')
+        
+        return {"FINISHED"}
+    
+# ROVER INTRO (FRONT FACING ONLY)
+class OPERATOR_talking(bpy.types.Operator):
+    bl_idname = "camnr.talking"
+    bl_label = "NR Talking"
+    def execute(self,context):
+        
+        # Scene compatibility hack to run script, regardless if script is ran in edit mode, or without an active object.
+        if len(bpy.context.scene.objects) == 0:
+            return {"FINISHED"}
+            
+        bpy.context.view_layer.objects.active = bpy.context.scene.objects[0]
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.select_all(action='DESELECT')
+
+        # Sets UV to "uv_5" and renders it. If >ALL< UVs are broken, edit this. Edit UVs manually if it's a mix.
+        if 'uv_5' in bpy.context.object.data.uv_layers:
+            bpy.context.object.data.uv_layers['uv_5'].active = True
+            bpy.context.object.data.uv_layers['uv_5'].active_render = True
+            
+        # Joins all separated objects into one mesh, as 3DX and NR meshes are a tossup.
+        bpy.ops.object.select_all()
+        bpy.ops.object.join()  
+
+        # Rotates collection, and applies scale.
+        bpy.ops.transform.rotate(use_proportional_edit=True, orient_axis='X', value=-2.37375)
+        bpy.ops.object.transform_apply(scale=True)
+
+        # Skews mesh data to be "normal."
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.transform.shear(orient_axis='X',value=-0.711223)
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Corrects scale inconsistencies.
+        bpy.ops.transform.resize(value=(0.63431, 1, 1))
+        bpy.ops.object.transform_apply(scale=True)
+        bpy.ops.transform.resize(value=(1, 1.52, 1))
+        
+        # Flips model. Delete this line if model somehow imports un-mirrored.
+        bpy.ops.transform.resize(value=(-1, 1, 1))
+
+        # Resizes collection to be about villager viewing height.
+        bpy.ops.transform.resize(value=(0.04, 0.04, 0.04))
+        bpy.ops.object.transform_apply(scale=True)
+
+        # Transforms object closer to 3D Grid's origin.
+        bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS', center='MEDIAN')
+        bpy.ops.object.location_clear(clear_delta=False)
+
+        # Merge duplicated and disconnected vertexes, and shades smooth. Remove lines 64-68 if this creates issues.
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action = 'SELECT')
+        bpy.ops.mesh.faces_shade_smooth()
+        bpy.ops.mesh.remove_doubles(threshold=0.0001)
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        return {"FINISHED"}
+
+# UV_5 PANIC BUTTON
+class OPERATOR_uv5(bpy.types.Operator):
+    bl_idname = "camnr.uv5"
+    bl_label = "UV_5 Fix"
+    def execute(self,context):
+        if 'uv_5' in bpy.context.object.data.uv_layers:
+            bpy.context.object.data.uv_layers['uv_5'].active = True
+            bpy.context.object.data.uv_layers['uv_5'].active_render = True
+            
+        return {"FINISHED"}
+
 # //////////////////////////////////////////////////////////////////// UI SECTION
 
 class ACRFPanel:
@@ -505,7 +690,6 @@ class acrf_main(ACRFPanel, bpy.types.Panel):
 class meshfix(ACRFPanel, bpy.types.Panel):
     bl_parent_id = "acrf_main"
     bl_label = "Mesh Fixes (NR/3DX)"
-    
 
     def draw(self, context):
         layout = self.layout
@@ -548,12 +732,28 @@ class extras(ACRFPanel, bpy.types.Panel):
         self.layout.separator()
         layout.operator("extra.smooth", text="Selection - Shade Smooth", icon="LIGHT_HEMI")
         self.layout.separator()
+        
+class cam(ACRFPanel, bpy.types.Panel):
+    bl_parent_id = "acrf_main"
+    bl_label = "(BETA) CAMERA ANGLES"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("camnr.startup", text="NR - Startup Meshfix", icon="PARTICLE_DATA")
+        self.layout.separator()
+        layout.operator("camnr.rover", text="NR - Rover Meshfix", icon="PARTICLE_DATA")
+        self.layout.separator()
+        layout.operator("camnr.talking", text="NR - Talking Meshfix", icon="PARTICLE_DATA")
+        self.layout.separator()
+        layout.operator("camnr.uv5", text="Force UV_5", icon="GHOST_DISABLED")
+        self.layout.separator()
 
 classes = (
     acrf_main,
     meshfix, 
     texturefix,
     extras,
+    cam,
     OPERATOR_NR_meshfix,
     OPERATOR_3DX_meshfix,
     OPERATOR_bsdftweak,
@@ -564,7 +764,11 @@ classes = (
     OPERATOR_water,
     OPERATOR_zfight,
     OPERATOR_flat,
-    OPERATOR_smooth
+    OPERATOR_smooth,
+    OPERATOR_startup,
+    OPERATOR_rover,
+    OPERATOR_talking,
+    OPERATOR_uv5
 )
 
 def register():
